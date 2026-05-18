@@ -1,0 +1,36 @@
+name: Dispatch Push Notifications
+
+# Pings the Supabase `dispatch-push` Edge Function so any unsent rows in
+# public.notifications are delivered to OneSignal.
+#
+# Note: GitHub Actions schedules run on a best-effort basis. Although
+# the cron expression below requests every minute, GitHub commonly
+# delays scheduled workflows by several minutes during high load.
+# Expect a realistic delivery latency of 1–10 minutes.
+
+on:
+  schedule:
+    - cron: "* * * * *"
+  workflow_dispatch:  # allow manual triggering from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: POST dispatch-push
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET is not set in repository secrets"
+            exit 1
+          fi
+          status=$(curl -sS -o response.txt -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "https://iqhezsojsphjftwengvk.supabase.co/functions/v1/dispatch-push")
+          echo "HTTP $status"
+          cat response.txt
+          [ "$status" = "200" ]
