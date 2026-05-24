@@ -8,8 +8,10 @@ import '../models/user_with_roles.dart';
 /// task-assignment pickers.
 final allMembersProvider =
     FutureProvider<List<UserWithRoles>>((ref) async {
-  final profiles =
-      await sb.from('profiles').select('id, full_name').order('full_name');
+  final profiles = await sb
+      .from('profiles')
+      .select('id, full_name, phone, university_id, major')
+      .order('full_name');
 
   final clubRoles = await sb.from('club_roles').select('user_id, role');
   final clubMap = {
@@ -40,6 +42,9 @@ final allMembersProvider =
       fullName: p['full_name'] as String,
       clubRole: clubMap[id],
       committees: cmMap[id] ?? const [],
+      phone: p['phone'] as String?,
+      universityId: p['university_id'] as String?,
+      major: p['major'] as String?,
     );
   }).toList();
 });

@@ -97,6 +97,45 @@ class _Body extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
+  /// Cancel (not delete) — flips status to `cancelled` so the task
+  /// stays in the system but is marked as ملغاة.
+  Future<void> _confirmCancel(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('تأكيد إلغاء المهمة'),
+        content: const Text(
+            'هل تريد إلغاء هذه المهمة؟ ستبقى في السجل لكنها ستُعلَّم كملغاة.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text(S.cancel)),
+          TextButton(
+              style: TextButton.styleFrom(
+                  foregroundColor: AppColors.statusOverdue),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('إلغاء المهمة')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref
+          .read(taskRepositoryProvider)
+          .updateStatus(task.id, TaskStatus.cancelled);
+      ref.invalidate(myVisibleTasksProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم إلغاء المهمة')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${S.error}: $e')));
+    }
+    return;
+  }
+
   String _resolveAssignee() {
     if (task.assigneeUserIds.isNotEmpty) {
       final id = task.assigneeUserIds.first;
@@ -123,7 +162,14 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final canDelete = perms.canDeleteTask(
-        taskCommitteeIds: task.assigneeCommitteeIds);
+      taskCommitteeIds: task.assigneeCommitteeIds,
+      createdBy: task.createdBy,
+    );
+    final canCancel = perms.canCancelTask(
+      taskCommitteeIds: task.assigneeCommitteeIds,
+      createdBy: task.createdBy,
+    );
+    final isAlreadyCancelled = task.status == TaskStatus.cancelled;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -139,8 +185,11 @@ class _Body extends ConsumerWidget {
                   label: S.delete,
                   onPressed: () => _confirmDelete(context, ref),
                 ),
-              // Edit flow not yet implemented — hide the button rather
-              // than show a no-op affordance.
+              if (canCancel && !isAlreadyCancelled)
+                PillButton.outlined(
+                  label: 'إلغاء',
+                  onPressed: () => _confirmCancel(context, ref),
+                ),
             ],
             bottom: Row(children: [
               StatusBadge(status: task.status),
@@ -160,6 +209,7 @@ class _Body extends ConsumerWidget {
                     TaskStatus.inProgress => S.statusInProgress,
                     TaskStatus.completed => S.statusCompleted,
                     TaskStatus.overdue => S.statusOverdue,
+                    TaskStatus.cancelled => S.statusCancelled,
                   },
                   valueColor: statusColor(task.status),
                 ),
@@ -200,9 +250,103 @@ class _Body extends ConsumerWidget {
               ),
             ),
           ],
+          // Status-change chips for assignees. RLS policy
+          // "tasks: assignees can update status" allows this for any
+          // user/committee assignee — we mirror that gate client-side.
+          if (_canChangeStatus(task, perms)) ...[
+            const SectionTitle('تغيير حالة المهمة'),
+            _StatusPicker(task: task),
+          ],
           const SizedBox(height: 8),
           _CommentsSection(taskId: task.id),
           _AttachmentsSection(taskId: task.id),
+        ],
+      ),
+    );
+  }
+}
+
+bool _canChangeStatus(Task t, Permissions perms) {
+  final me = perms.me;
+  if (me == null) return false;
+  if (perms.isPresident) return true;
+  if (t.createdBy == me.id) return true;
+  if (t.assigneeUserIds.contains(me.id)) return true;
+  // Member of an assigned committee → also allowed.
+  final myCommitteeIds = me.committees.map((c) => c.committeeId).toSet();
+  return t.assigneeCommitteeIds.any(myCommitteeIds.contains);
+}
+
+class _StatusPicker extends ConsumerStatefulWidget {
+  const _StatusPicker({required this.task});
+  final Task task;
+  @override
+  ConsumerState<_StatusPicker> createState() => _StatusPickerState();
+}
+
+class _StatusPickerState extends ConsumerState<_StatusPicker> {
+  bool _saving = false;
+
+  Future<void> _set(TaskStatus s) async {
+    if (s == widget.task.status || _saving) return;
+    setState(() => _saving = true);
+    try {
+      await ref.read(taskRepositoryProvider).updateStatus(widget.task.id, s);
+      ref.invalidate(myVisibleTasksProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${S.error}: $e')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final options = <(TaskStatus, String, Color)>[
+      (TaskStatus.pending, S.statusPending, AppColors.statusPending),
+      (TaskStatus.inProgress, S.statusInProgress, AppColors.statusInProgress),
+      (TaskStatus.completed, S.statusCompleted, AppColors.statusCompleted),
+    ];
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      child: Row(
+        children: [
+          for (var i = 0; i < options.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(
+              child: InkWell(
+                onTap: _saving ? null : () => _set(options[i].$1),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: widget.task.status == options[i].$1
+                        ? options[i].$3.withValues(alpha: 0.15)
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: widget.task.status == options[i].$1
+                          ? options[i].$3
+                          : AppColors.border,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    options[i].$2,
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: widget.task.status == options[i].$1
+                          ? options[i].$3
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

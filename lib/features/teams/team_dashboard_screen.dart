@@ -268,6 +268,7 @@ class _TasksTable extends StatelessWidget {
         TaskStatus.inProgress => 0.5,
         TaskStatus.overdue => 0.3,
         TaskStatus.pending => 0.0,
+        TaskStatus.cancelled => 0.0,
       };
 
   Color _progressColor(TaskStatus s) => switch (s) {
@@ -275,6 +276,7 @@ class _TasksTable extends StatelessWidget {
         TaskStatus.overdue => AppColors.statusOverdue,
         TaskStatus.inProgress => AppColors.statusInProgress,
         TaskStatus.pending => AppColors.statusPending,
+        TaskStatus.cancelled => AppColors.statusPending,
       };
 
   String _statusLabel(TaskStatus s) => switch (s) {
@@ -282,6 +284,7 @@ class _TasksTable extends StatelessWidget {
         TaskStatus.inProgress => S.statusInProgress,
         TaskStatus.overdue => S.statusOverdue,
         TaskStatus.pending => S.statusPending,
+        TaskStatus.cancelled => S.statusCancelled,
       };
 }
 

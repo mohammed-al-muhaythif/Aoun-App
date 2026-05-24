@@ -4,9 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/login_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/hours/hours_feed_screen.dart';
 import '../../features/hours/hr_leaderboard_screen.dart';
 import '../../features/hours/log_hours_screen.dart';
 import '../../features/hours/my_hours_screen.dart';
+import '../../features/members/add_member_screen.dart';
+import '../../features/members/committee_members_screen.dart';
+import '../../features/members/edit_member_screen.dart';
+import '../../features/members/member_detail_screen.dart';
 import '../../features/members/member_profile_screen.dart';
 import '../../features/members/members_directory_screen.dart';
 import '../../features/notifications/compose_notification_screen.dart';
@@ -78,6 +83,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const HrLeaderboardScreen(),
       ),
       GoRoute(
+        path: '/hours/feed',
+        builder: (_, _) => const HoursFeedScreen(),
+      ),
+      GoRoute(
         path: '/committees/:id/hours',
         builder: (_, s) => HrLeaderboardScreen(
           committeeId: int.parse(s.pathParameters['id']!),
@@ -100,6 +109,33 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/members/:id',
         builder: (_, s) =>
             MemberProfileScreen(memberId: s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/committees/:id/members',
+        builder: (_, s) => CommitteeMembersScreen(
+          committeeId: int.parse(s.pathParameters['id']!),
+          committeeName: s.uri.queryParameters['name'],
+        ),
+      ),
+      GoRoute(
+        path: '/committees/:id/members/new',
+        builder: (_, s) => AddMemberScreen(
+          committeeId: int.parse(s.pathParameters['id']!),
+          committeeName: s.uri.queryParameters['name'],
+        ),
+      ),
+      GoRoute(
+        path: '/committees/:cid/members/:mid',
+        builder: (_, s) => MemberDetailScreen(
+          committeeId: int.parse(s.pathParameters['cid']!),
+          memberId: s.pathParameters['mid']!,
+          committeeName: s.uri.queryParameters['name'],
+        ),
+      ),
+      GoRoute(
+        path: '/members/:id/edit',
+        builder: (_, s) =>
+            EditMemberScreen(memberId: s.pathParameters['id']!),
       ),
     ],
   );

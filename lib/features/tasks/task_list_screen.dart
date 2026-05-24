@@ -5,8 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/localization/formatters.dart';
 import '../../core/localization/strings.dart';
+import '../../core/permissions/permissions.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/task.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/task_repository.dart';
 import '../../shared/widgets/design_system.dart';
 import '../../shared/widgets/empty_state.dart';
@@ -29,12 +31,26 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   @override
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(myVisibleTasksProvider);
+    final meAsync = ref.watch(currentUserProvider);
+    final canCreate = meAsync.maybeWhen(
+      data: (me) => Permissions(me).canCreateTask,
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(S.tasks),
         actions: const [NotificationBell(), SizedBox(width: 4)],
       ),
+      floatingActionButton: canCreate
+          ? FloatingActionButton.extended(
+              backgroundColor: AppColors.purple,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add),
+              label: const Text(S.newTask),
+              onPressed: () => context.push('/tasks/new'),
+            )
+          : null,
       body: tasksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('${S.error}: $e')),

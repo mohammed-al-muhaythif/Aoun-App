@@ -10,6 +10,7 @@ import '../../data/models/volunteer_hours.dart';
 import '../../data/repositories/hours_repository.dart';
 import '../../shared/widgets/design_system.dart';
 import '../../shared/widgets/empty_state.dart';
+import 'hours_unit.dart';
 
 class MyHoursScreen extends ConsumerWidget {
   const MyHoursScreen({super.key});
@@ -41,6 +42,7 @@ class MyHoursScreen extends ConsumerWidget {
               GradientHero(
                 title: S.myHours,
                 subtitle: 'سجل ساعات التطوع',
+                trailing: const HoursUnitToggle(),
                 bottom: summaryAsync.when(
                   loading: () => const _SummarySkeleton(),
                   error: (_, _) => const SizedBox.shrink(),
@@ -73,9 +75,6 @@ class MyHoursScreen extends ConsumerWidget {
   }
 }
 
-String _fmtHours(double v) =>
-    v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 1);
-
 class _SummarySkeleton extends StatelessWidget {
   const _SummarySkeleton();
   @override
@@ -90,16 +89,17 @@ class _SummarySkeleton extends StatelessWidget {
   }
 }
 
-class _SummaryGrid extends StatelessWidget {
+class _SummaryGrid extends ConsumerWidget {
   const _SummaryGrid({required this.summary});
   final HoursSummary summary;
 
   @override
-  Widget build(BuildContext context) {
-    Widget cell(String label, double v, Color color) => Expanded(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(hoursUnitProvider);
+    Widget cell(String label, int v, Color color) => Expanded(
           child: StatTile(
             label: label,
-            value: _fmtHours(v),
+            value: formatVolunteerTime(v, unit),
             color: color,
             icon: Icons.access_time,
           ),
@@ -128,6 +128,7 @@ class _SessionCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(hoursUnitProvider);
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       onTap: () => _confirmDelete(context, ref),
@@ -170,7 +171,7 @@ class _SessionCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              '${_fmtHours(session.hours)} س',
+              formatVolunteerTime(session.minutes, unit),
               style: GoogleFonts.cairo(
                   fontWeight: FontWeight.w800,
                   color: AppColors.purple,

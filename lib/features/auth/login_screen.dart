@@ -184,28 +184,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-/// "Two hands" logo disc — soft purple background with a stylized
-/// giving-hands glyph in the brand purple.
+/// Official Awan club logo at its native size — clipped to a circle
+/// with a thin purple ring drawn on top. The image fills (or overflows)
+/// the disc; clipping removes only the edges, no shrinking.
 class _Logo extends StatelessWidget {
   const _Logo();
 
   @override
   Widget build(BuildContext context) {
+    const size = 130.0;
     return Center(
-      child: Container(
-        width: 110,
-        height: 110,
-        decoration: BoxDecoration(
-          color: AppColors.purpleLight,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.purple.withValues(alpha: 0.18),
-              width: 1.5),
-        ),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.volunteer_activism,
-          color: AppColors.purple,
-          size: 56,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            ClipOval(
+              child: Container(
+                width: size,
+                height: size,
+                color: AppColors.purpleLight,
+                child: Image.asset(
+                  'assets/images/awan_logo.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => const Icon(
+                    Icons.volunteer_activism,
+                    color: AppColors.purple,
+                    size: 56,
+                  ),
+                ),
+              ),
+            ),
+            // Ring on top so it sits above the clipped image edge.
+            Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.purple.withValues(alpha: 0.18),
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

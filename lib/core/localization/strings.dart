@@ -3,7 +3,7 @@
 
 class S {
   // App
-  static const appTitle = 'عَون';
+  static const appTitle = 'عاون';
 
   // Auth
   static const login = 'تسجيل الدخول';
@@ -54,6 +54,7 @@ class S {
   static const statusInProgress = 'قيد التنفيذ';
   static const statusCompleted = 'مكتملة';
   static const statusOverdue = 'متأخرة';
+  static const statusCancelled = 'ملغاة';
 
   // Members
   static const members = 'الأعضاء';

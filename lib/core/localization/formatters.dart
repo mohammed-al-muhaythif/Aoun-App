@@ -21,3 +21,18 @@ String formatRelativeArabic(DateTime when) {
   if (diff.inDays < 7) return 'منذ ${diff.inDays} يوم';
   return formatArabicDateShort(when);
 }
+
+/// Convert any integer to Arabic-Indic digits — e.g. 1746 → "١٧٤٦".
+String toArabicDigits(num n) {
+  const indic = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  final out = StringBuffer();
+  for (final ch in n.toString().split('')) {
+    final i = '0123456789'.indexOf(ch);
+    out.write(i >= 0 ? indic[i] : ch);
+  }
+  return out.toString();
+}
+
+/// Volunteer-hours display: minutes followed by "دقيقة" in Arabic digits.
+/// e.g. 45 → "٤٥ دقيقة", 1746 → "١٧٤٦ دقيقة".
+String formatMinutes(int m) => '${toArabicDigits(m)} دقيقة';

@@ -3,7 +3,7 @@ class VolunteerHours {
     required this.id,
     required this.userId,
     required this.description,
-    required this.hours,
+    required this.minutes,
     required this.activityDate,
     this.notes,
     required this.createdAt,
@@ -12,7 +12,7 @@ class VolunteerHours {
   final String id;
   final String userId;
   final String description;
-  final double hours;
+  final int minutes;
   final DateTime activityDate;
   final String? notes;
   final DateTime createdAt;
@@ -21,14 +21,14 @@ class VolunteerHours {
         id: m['id'] as String,
         userId: m['user_id'] as String,
         description: m['description'] as String,
-        hours: (m['hours'] as num).toDouble(),
+        minutes: (m['minutes'] as num).toInt(),
         activityDate: DateTime.parse(m['activity_date'] as String),
         notes: m['notes'] as String?,
         createdAt: DateTime.parse(m['created_at'] as String),
       );
 }
 
-/// Aggregated totals for the my-hours summary cards.
+/// Aggregated totals (in minutes) for the my-hours summary cards.
 class HoursSummary {
   HoursSummary({
     required this.week,
@@ -37,36 +37,35 @@ class HoursSummary {
     required this.allTime,
   });
 
-  final double week;
-  final double month;
-  final double year;
-  final double allTime;
+  final int week;
+  final int month;
+  final int year;
+  final int allTime;
 
   factory HoursSummary.fromSessions(List<VolunteerHours> sessions) {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday % 7));
     final monthStart = DateTime(now.year, now.month, 1);
     final yearStart = DateTime(now.year, 1, 1);
-    double w = 0, m = 0, y = 0, all = 0;
+    int w = 0, mo = 0, y = 0, all = 0;
     for (final s in sessions) {
-      all += s.hours;
-      if (!s.activityDate.isBefore(yearStart)) y += s.hours;
-      if (!s.activityDate.isBefore(monthStart)) m += s.hours;
-      if (!s.activityDate.isBefore(weekStart)) w += s.hours;
+      all += s.minutes;
+      if (!s.activityDate.isBefore(yearStart)) y += s.minutes;
+      if (!s.activityDate.isBefore(monthStart)) mo += s.minutes;
+      if (!s.activityDate.isBefore(weekStart)) w += s.minutes;
     }
-    return HoursSummary(week: w, month: m, year: y, allTime: all);
+    return HoursSummary(week: w, month: mo, year: y, allTime: all);
   }
 }
 
-/// One row of the `get_hours_leaderboard` RPC — a member with their
-/// aggregated hours for a given period (and optional committee filter).
+/// One row of the `get_hours_leaderboard` RPC — totals in minutes.
 class LeaderboardEntry {
   LeaderboardEntry({
     required this.userId,
     required this.fullName,
     this.primaryCommitteeAr,
     this.primaryRole,
-    required this.totalHours,
+    required this.totalMinutes,
     required this.sessionCount,
     this.lastActivity,
   });
@@ -75,7 +74,7 @@ class LeaderboardEntry {
   final String fullName;
   final String? primaryCommitteeAr;
   final String? primaryRole;
-  final double totalHours;
+  final int totalMinutes;
   final int sessionCount;
   final DateTime? lastActivity;
 
@@ -84,7 +83,7 @@ class LeaderboardEntry {
         fullName: m['full_name'] as String,
         primaryCommitteeAr: m['primary_committee_ar'] as String?,
         primaryRole: m['primary_role'] as String?,
-        totalHours: (m['total_hours'] as num?)?.toDouble() ?? 0,
+        totalMinutes: (m['total_minutes'] as num?)?.toInt() ?? 0,
         sessionCount: (m['session_count'] as num?)?.toInt() ?? 0,
         lastActivity: m['last_activity'] == null
             ? null

@@ -47,12 +47,38 @@ class Permissions {
 
   // ─── tasks ─────────────────────────────────────────────────────────
   bool get canCreateTask => isAnyCommitteeHead || isPresident;
-  bool canDeleteTask({required Iterable<int> taskCommitteeIds}) =>
-      isPresident || taskCommitteeIds.any(isCommitteeHead);
+
+  /// Can the caller delete (permanently remove) this task?
+  /// Allowed for: admin/president, the task's creator, or the head of
+  /// any committee the task is assigned to.
+  bool canDeleteTask({
+    required Iterable<int> taskCommitteeIds,
+    String? createdBy,
+  }) =>
+      isPresident ||
+      (createdBy != null && me?.id == createdBy) ||
+      taskCommitteeIds.any(isCommitteeHead);
+
+  /// Same actor set as delete — cancel just flips the status row.
+  bool canCancelTask({
+    required Iterable<int> taskCommitteeIds,
+    String? createdBy,
+  }) =>
+      canDeleteTask(
+          taskCommitteeIds: taskCommitteeIds, createdBy: createdBy);
 
   // ─── members / committees ─────────────────────────────────────────
+  /// Manage = add/remove/promote/demote members in a committee.
+  /// Allowed for: admin, HR member (any committee), or that committee's head.
   bool canManageCommittee(int committeeId) =>
-      isPresident || isCommitteeHead(committeeId);
+      isPresident || isInHr || isCommitteeHead(committeeId);
+
+  /// Full HR powers (delete user from system, set head role).
+  bool get isHrOrAdmin => isPresident || isInHr;
+
+  /// God mode — the `app_admin` club role. Can manage club_roles
+  /// (incl. demoting the president), delete permanent teams, etc.
+  bool get isAppAdmin => me?.clubRole == 'app_admin';
 
   // ─── volunteer hours ──────────────────────────────────────────────
   bool canEditHoursOf(UserWithRoles target) {

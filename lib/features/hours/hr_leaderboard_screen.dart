@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/localization/strings.dart';
+import 'hours_unit.dart';
+// `formatVolunteerTime` lives in hours_unit.dart and renders the
+// minutes value in either دقيقة or ساعة per the global unit toggle.
 import '../../core/permissions/permissions.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -33,23 +36,24 @@ class _HrLeaderboardScreenState extends ConsumerState<HrLeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The main leaderboard is open to every authenticated member.
+    // The committee-scoped variant remains gated to committee-head /
+    // HR / admin.
     final meAsync = ref.watch(currentUserProvider);
-    final allowed = meAsync.maybeWhen(
-      data: (me) {
-        final p = Permissions(me);
-        return widget.committeeId == null
-            ? p.canViewLeaderboards
-            : p.canViewCommitteeHours(widget.committeeId!);
-      },
-      orElse: () => false,
-    );
+    final allowed = widget.committeeId == null
+        ? meAsync.value != null
+        : meAsync.maybeWhen(
+            data: (me) =>
+                Permissions(me).canViewCommitteeHours(widget.committeeId!),
+            orElse: () => false,
+          );
 
     if (!allowed) {
       return Scaffold(
         backgroundColor: AppColors.surface,
         appBar: AppBar(title: const Text('لوحة الشرف')),
         body: const EmptyState(
-            message: 'هذه الصفحة متاحة لمسؤولي الموارد البشرية فقط',
+            message: 'هذه الصفحة لرئيس اللجنة فقط',
             icon: Icons.lock_outline),
       );
     }
@@ -63,7 +67,14 @@ class _HrLeaderboardScreenState extends ConsumerState<HrLeaderboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: widget.committeeId != null
-          ? AppBar(title: Text(widget.title ?? 'ساعات اللجنة'))
+          ? AppBar(
+              title: Text(widget.title ?? 'ساعات اللجنة'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () =>
+                    context.canPop() ? context.pop() : context.go('/'),
+              ),
+            )
           : null,
       body: SafeArea(
         child: Padding(
@@ -78,6 +89,19 @@ class _HrLeaderboardScreenState extends ConsumerState<HrLeaderboardScreen> {
                 subtitle: widget.committeeId == null
                     ? 'الأعضاء الأكثر تطوعًا'
                     : 'ترتيب أعضاء اللجنة',
+                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const HoursUnitToggle(),
+                  if (widget.committeeId == null) ...[
+                    const SizedBox(width: 6),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      tooltip: 'رجوع',
+                      onPressed: () => context.canPop()
+                          ? context.pop()
+                          : context.go('/'),
+                    ),
+                  ],
+                ]),
                 bottom: Container(
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.95),
@@ -123,7 +147,7 @@ class _HrLeaderboardScreenState extends ConsumerState<HrLeaderboardScreen> {
   }
 }
 
-class _RankRow extends StatelessWidget {
+class _RankRow extends ConsumerWidget {
   const _RankRow({required this.rank, required this.entry});
   final int rank;
   final LeaderboardEntry entry;
@@ -142,9 +166,9 @@ class _RankRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final hoursStr =
-        '${entry.totalHours.toStringAsFixed(entry.totalHours.truncateToDouble() == entry.totalHours ? 0 : 1)} س';
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(hoursUnitProvider);
+    final minutesStr = formatVolunteerTime(entry.totalMinutes, unit);
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       onTap: () => context.push('/members/${entry.userId}'),
@@ -197,7 +221,7 @@ class _RankRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              hoursStr,
+              minutesStr,
               style: GoogleFonts.cairo(
                   fontWeight: FontWeight.w800,
                   color: AppColors.purple,

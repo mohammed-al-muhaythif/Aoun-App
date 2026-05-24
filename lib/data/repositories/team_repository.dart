@@ -6,7 +6,7 @@ import '../models/team.dart';
 final teamsProvider = FutureProvider<List<Team>>((ref) async {
   final rows = await sb
       .from('teams')
-      .select('*, team_members(user_id)')
+      .select('*, team_members(user_id, role)')
       .order('created_at', ascending: false);
   return (rows as List)
       .map((m) => Team.fromMap(m as Map<String, dynamic>))
@@ -14,6 +14,11 @@ final teamsProvider = FutureProvider<List<Team>>((ref) async {
 });
 
 class TeamRepository {
+  /// Delete a team. RLS enforces who can delete (admin + creator for
+  /// non-permanent teams; only app_admin for permanent teams).
+  Future<void> deleteTeam(String teamId) =>
+      sb.from('teams').delete().eq('id', teamId);
+
   Future<String> createTeam({
     required String name,
     String? description,

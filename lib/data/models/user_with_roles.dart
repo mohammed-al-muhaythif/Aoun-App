@@ -7,12 +7,18 @@ class UserWithRoles {
     required this.fullName,
     this.clubRole,
     this.committees = const [],
+    this.phone,
+    this.universityId,
+    this.major,
   });
 
   final String id;
   final String fullName;
   final String? clubRole; // president | vice_president | null
   final List<CommitteeMembership> committees;
+  final String? phone;
+  final String? universityId;
+  final String? major;
 
   /// Best-effort display role label in Arabic.
   String get primaryRoleLabel {

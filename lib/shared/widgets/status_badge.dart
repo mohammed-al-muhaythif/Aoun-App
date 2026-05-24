@@ -16,6 +16,7 @@ class StatusBadge extends StatelessWidget {
         (S.statusInProgress, AppColors.statusInProgress),
       TaskStatus.completed => (S.statusCompleted, AppColors.statusCompleted),
       TaskStatus.overdue => (S.statusOverdue, AppColors.statusOverdue),
+      TaskStatus.cancelled => (S.statusCancelled, AppColors.statusPending),
       TaskStatus.pending => (S.statusPending, AppColors.statusPending),
     };
     return Pill(label: label, color: color);
@@ -41,5 +42,6 @@ Color statusColor(TaskStatus s) => switch (s) {
       TaskStatus.completed => AppColors.statusCompleted,
       TaskStatus.inProgress => AppColors.statusInProgress,
       TaskStatus.overdue => AppColors.statusOverdue,
+      TaskStatus.cancelled => AppColors.statusPending,
       TaskStatus.pending => AppColors.statusPending,
     };

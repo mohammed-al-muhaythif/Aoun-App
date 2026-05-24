@@ -20,7 +20,7 @@ class LogHoursScreen extends ConsumerStatefulWidget {
 class _LogHoursScreenState extends ConsumerState<LogHoursScreen> {
   final _formKey = GlobalKey<FormState>();
   final _description = TextEditingController();
-  final _hours = TextEditingController();
+  final _minutes = TextEditingController();
   final _notes = TextEditingController();
   DateTime _date = DateTime.now();
   bool _saving = false;
@@ -28,7 +28,7 @@ class _LogHoursScreenState extends ConsumerState<LogHoursScreen> {
   @override
   void dispose() {
     _description.dispose();
-    _hours.dispose();
+    _minutes.dispose();
     _notes.dispose();
     super.dispose();
   }
@@ -39,7 +39,7 @@ class _LogHoursScreenState extends ConsumerState<LogHoursScreen> {
     try {
       await ref.read(hoursRepositoryProvider).logHours(
             description: _description.text.trim(),
-            hours: double.parse(_hours.text),
+            minutes: int.parse(_minutes.text),
             activityDate: _date,
             notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
           );
@@ -86,21 +86,20 @@ class _LogHoursScreenState extends ConsumerState<LogHoursScreen> {
                   Row(children: [
                     Expanded(
                       child: _LabelledChild(
-                        label: 'عدد الساعات',
+                        label: 'عدد الدقائق',
                         child: TextFormField(
-                          controller: _hours,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
+                          controller: _minutes,
+                          keyboardType: TextInputType.number,
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d{0,2}')),
+                            FilteringTextInputFormatter.digitsOnly,
                           ],
-                          decoration: const InputDecoration(hintText: '2.5'),
+                          decoration: const InputDecoration(
+                              hintText: 'أدخل عدد الدقائق'),
                           validator: (v) {
                             if (v == null || v.isEmpty) return S.required;
-                            final n = double.tryParse(v);
-                            if (n == null || n <= 0 || n > 24) {
-                              return 'بين 0 و 24';
+                            final n = int.tryParse(v);
+                            if (n == null || n <= 0) {
+                              return 'أدخل رقمًا صحيحًا أكبر من صفر';
                             }
                             return null;
                           },
@@ -153,7 +152,7 @@ class _LogHoursScreenState extends ConsumerState<LogHoursScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('حفظ الساعات'),
+                      : const Text('حفظ الدقائق'),
                 ),
               ),
               const SizedBox(width: 10),

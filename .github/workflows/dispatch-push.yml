@@ -1,16 +1,17 @@
 name: Dispatch Push Notifications
 
 # Pings the Supabase `dispatch-push` Edge Function so any unsent rows in
-# public.notifications are delivered to OneSignal.
+# public.notifications are delivered to OneSignal as a single daily
+# digest at 15:00 Riyadh time (= 12:00 UTC, since KSA is UTC+3).
 #
-# Note: GitHub Actions schedules run on a best-effort basis. Although
-# the cron expression below requests every minute, GitHub commonly
-# delays scheduled workflows by several minutes during high load.
-# Expect a realistic delivery latency of 1–10 minutes.
+# Trade-off: notifications (task assignments, comments, etc.) will be
+# delayed by up to 24h before reaching the phone. Realtime in-app bell
+# updates still work instantly via Supabase Realtime — only the OneSignal
+# push to the device is batched.
 
 on:
   schedule:
-    - cron: "* * * * *"
+    - cron: "0 12 * * *"
   workflow_dispatch:  # allow manual triggering from the Actions tab
 
 jobs:

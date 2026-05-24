@@ -68,7 +68,7 @@ class GradientHero extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           if (actions != null) ...[
@@ -149,7 +149,7 @@ class SectionTitle extends StatelessWidget {
                 fontSize: 15,
                 color: AppColors.textPrimary)),
         const Spacer(),
-        if (trailing != null) trailing!,
+        ?trailing,
       ]),
     );
   }

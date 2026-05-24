@@ -79,9 +79,10 @@ final leaderboardProvider =
 });
 
 class HoursRepository {
+  /// Insert a new entry. `minutes` is the raw number of minutes (int, > 0).
   Future<void> logHours({
     required String description,
-    required double hours,
+    required int minutes,
     required DateTime activityDate,
     String? notes,
   }) async {
@@ -89,7 +90,7 @@ class HoursRepository {
     await sb.from('volunteer_hours').insert({
       'user_id': uid,
       'description': description,
-      'hours': hours,
+      'minutes': minutes,
       'activity_date':
           activityDate.toIso8601String().substring(0, 10),
       'notes': notes,

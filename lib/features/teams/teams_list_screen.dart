@@ -18,6 +18,7 @@ class TeamsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teamsAsync = ref.watch(teamsProvider);
+    // Only club admin / board / leadership can create teams.
     final meAsync = ref.watch(currentUserProvider);
     final canCreate = meAsync.maybeWhen(
       data: (me) => Permissions(me).isPresident,
@@ -83,12 +84,57 @@ class TeamsListScreen extends ConsumerWidget {
   }
 }
 
-class _TeamCard extends StatelessWidget {
+class _TeamCard extends ConsumerWidget {
   const _TeamCard({required this.team});
   final Team team;
 
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(team.isPermanent ? 'حذف فريق دائم' : 'حذف الفريق',
+            style: GoogleFonts.cairo()),
+        content: Text(
+          team.isPermanent
+              ? 'هذا فريق دائم. الحذف لا يمكن التراجع عنه. متأكد؟'
+              : 'هل تريد حذف الفريق "${team.name}"؟',
+          style: GoogleFonts.cairo(),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text(S.cancel)),
+          TextButton(
+            style:
+                TextButton.styleFrom(foregroundColor: AppColors.statusOverdue),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(S.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(teamRepositoryProvider).deleteTeam(team.id);
+      ref.invalidate(teamsProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم حذف الفريق')));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('${S.error}: $e')));
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final perms = Permissions(ref.watch(currentUserProvider).value);
+    // app_admin can delete any team (incl. permanent).
+    // Other admins can delete non-permanent teams they created.
+    final canDelete = perms.isAppAdmin ||
+        (!team.isPermanent && perms.isPresident);
+
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       onTap: () => context.push('/teams/${team.id}'),
@@ -156,6 +202,18 @@ class _TeamCard extends StatelessWidget {
                   color: AppColors.purple),
             ),
           ),
+          if (canDelete) ...[
+            const SizedBox(width: 4),
+            InkWell(
+              onTap: () => _confirmDelete(context, ref),
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.delete_outline,
+                    color: AppColors.statusOverdue, size: 20),
+              ),
+            ),
+          ],
         ],
       ),
     );

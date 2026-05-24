@@ -1,5 +1,5 @@
 enum TaskPriority { high, medium, low }
-enum TaskStatus { pending, inProgress, completed, overdue }
+enum TaskStatus { pending, inProgress, completed, overdue, cancelled }
 
 TaskPriority priorityFromString(String s) =>
     TaskPriority.values.firstWhere((p) => p.name == s);
@@ -11,6 +11,8 @@ TaskStatus statusFromString(String s) {
       return TaskStatus.completed;
     case 'overdue':
       return TaskStatus.overdue;
+    case 'cancelled':
+      return TaskStatus.cancelled;
     default:
       return TaskStatus.pending;
   }
@@ -20,6 +22,7 @@ String statusToString(TaskStatus s) => switch (s) {
       TaskStatus.inProgress => 'in_progress',
       TaskStatus.completed => 'completed',
       TaskStatus.overdue => 'overdue',
+      TaskStatus.cancelled => 'cancelled',
       TaskStatus.pending => 'pending',
     };
 

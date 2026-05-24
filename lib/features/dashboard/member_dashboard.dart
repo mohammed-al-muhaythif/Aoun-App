@@ -114,9 +114,13 @@ class _MemberDashboardState extends ConsumerState<MemberDashboard> {
                 ),
               ),
 
+              // Leaderboard is visible to ALL authenticated members.
+              // The activity feed remains gated to HR / admin.
+              const SectionTitle('أدوات إضافية'),
+              const _LeaderboardTile(),
               if (widget.perms.canViewLeaderboards) ...[
-                const SectionTitle('أدوات إضافية'),
-                const _LeaderboardTile(),
+                const SizedBox(height: 10),
+                const _HoursFeedTile(),
               ],
 
               const SectionTitle('قائمة المهام'),
@@ -252,6 +256,49 @@ class _WhiteNotificationBell extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       child: const NotificationBell(),
+    );
+  }
+}
+
+class _HoursFeedTile extends StatelessWidget {
+  const _HoursFeedTile();
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      onTap: () => context.push('/hours/feed'),
+      child: Row(children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.purple.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: const Icon(Icons.timeline,
+              color: AppColors.purple, size: 22),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('نشاط الساعات',
+                  style: GoogleFonts.cairo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary)),
+              Text('سجل مباشر لساعات كل الأعضاء',
+                  style: GoogleFonts.cairo(
+                      fontSize: 12,
+                      color: AppColors.textSecondary)),
+            ],
+          ),
+        ),
+        const Icon(Icons.chevron_left,
+            color: AppColors.textSecondary, size: 22),
+      ]),
     );
   }
 }

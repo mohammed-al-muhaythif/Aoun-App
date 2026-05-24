@@ -130,6 +130,24 @@ class _CommitteeDashboardState extends ConsumerState<CommitteeDashboard> {
               ),
               const SizedBox(height: 12),
               if (_tab == 0) ...[
+                if (widget.perms.canCreateTask) ...[
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.purple,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(46),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: GoogleFonts.cairo(
+                          fontSize: 14, fontWeight: FontWeight.w800),
+                    ),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('إضافة مهمة جديدة'),
+                    onPressed: () => context.push('/tasks/new'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 _CommitteeStatsTable(tasks: cTasks, members: members),
                 const SizedBox(height: 12),
                 if (widget.perms.canViewCommitteeHours(cId)) ...[
@@ -143,13 +161,23 @@ class _CommitteeDashboardState extends ConsumerState<CommitteeDashboard> {
                   ),
                   const SizedBox(height: 10),
                 ],
+                // Leaderboard visible to ALL members (no permission gate).
+                _HoursAccessTile(
+                  title: 'لوحة شرف الساعات',
+                  subtitle: 'الأعضاء الأكثر تطوعًا',
+                  icon: Icons.emoji_events_outlined,
+                  color: AppColors.statusInProgress,
+                  onTap: () => context.push('/leaderboard'),
+                ),
+                const SizedBox(height: 10),
+                // Activity feed remains HR / admin only.
                 if (widget.perms.canViewLeaderboards) ...[
                   _HoursAccessTile(
-                    title: 'لوحة شرف الساعات',
-                    subtitle: 'الأعضاء الأكثر تطوعًا',
-                    icon: Icons.emoji_events_outlined,
-                    color: AppColors.statusInProgress,
-                    onTap: () => context.push('/leaderboard'),
+                    title: 'نشاط الساعات',
+                    subtitle: 'سجل مباشر لكل الأعضاء',
+                    icon: Icons.timeline,
+                    color: AppColors.purple,
+                    onTap: () => context.push('/hours/feed'),
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -335,9 +363,10 @@ class _MembersGrid extends StatelessWidget {
                   textStyle: GoogleFonts.cairo(
                       fontSize: 12, fontWeight: FontWeight.w700),
                 ),
-                onPressed: () => context.push('/members?committee=$committeeId'),
+                onPressed: () => context.push(
+                    '/committees/$committeeId/members'),
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('إضافة عضو'),
+                label: const Text('إدارة الأعضاء'),
               ),
           ]),
           const SizedBox(height: 12),
