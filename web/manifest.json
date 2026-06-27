@@ -1,23 +1,30 @@
 {
-    "name": "aoun_app",
-    "short_name": "aoun_app",
+    "name": "عون - AWAN",
+    "short_name": "عون",
+    "description": "عون — منصة إدارة المهام والساعات التطوعية لنادي عون بجامعة الملك سعود.",
+    "lang": "ar",
+    "dir": "rtl",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "display_override": ["standalone", "minimal-ui"],
     "orientation": "portrait-primary",
+    "background_color": "#EDF6FD",
+    "theme_color": "#1C6FB5",
+    "categories": ["productivity", "education", "social"],
     "prefer_related_applications": false,
     "icons": [
         {
             "src": "icons/Icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "icons/Icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "icons/Icon-maskable-192.png",

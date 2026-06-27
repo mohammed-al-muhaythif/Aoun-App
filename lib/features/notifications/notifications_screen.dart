@@ -12,6 +12,7 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/notification_repository.dart';
 import '../../shared/widgets/design_system.dart';
 import '../../shared/widgets/empty_state.dart';
+import '../../shared/widgets/enable_push_button.dart';
 
 /// Mockup #6 (image 1, middle panel) — "صفحة الإشعارات".
 /// Two sections: "إشعارات جديدة" (with red unread-count badge) and
@@ -58,7 +59,11 @@ class NotificationsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: notificationsAsync.when(
+      body: Column(
+        children: [
+          const EnablePushButton(),
+          Expanded(
+            child: notificationsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('${S.error}: $e')),
         data: (list) {
@@ -102,6 +107,9 @@ class NotificationsScreen extends ConsumerWidget {
             ),
           );
         },
+            ),
+          ),
+        ],
       ),
     );
   }
