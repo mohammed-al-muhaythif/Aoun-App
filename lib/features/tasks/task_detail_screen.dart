@@ -18,6 +18,7 @@ import '../../data/repositories/task_repository.dart';
 import '../../shared/widgets/design_system.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/status_badge.dart';
+import 'task_labels.dart';
 
 /// Mockup-matched task detail (image 1, rightmost panel).
 ///
@@ -150,13 +151,29 @@ class _Body extends ConsumerWidget {
     return '—';
   }
 
-  String _resolveTeam() {
-    if (task.assigneeCommitteeIds.isNotEmpty) {
-      final cid = task.assigneeCommitteeIds.first;
-      final c = committees.where((c) => c.id == cid).firstOrNull;
-      if (c != null) return 'لجنة ${c.nameAr}';
-    }
-    return '—';
+  String _committeeLabel() => taskCommitteeLabel(task, committees, members);
+  String _creatorName() => taskCreatorName(task, members);
+
+  /// Prominent committee chip shown on the (purple) hero so the committee —
+  /// or "مهمة عامة" — is obvious at the top of the task.
+  Widget _heroCommitteeChip() {
+    final label = _committeeLabel();
+    final general = label == 'مهمة عامة';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(general ? Icons.public : Icons.groups_outlined,
+            size: 14, color: Colors.white),
+        const SizedBox(width: 5),
+        Text(label,
+            style: GoogleFonts.cairo(
+                fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+      ]),
+    );
   }
 
   @override
@@ -191,11 +208,16 @@ class _Body extends ConsumerWidget {
                   onPressed: () => _confirmCancel(context, ref),
                 ),
             ],
-            bottom: Row(children: [
-              StatusBadge(status: task.status),
-              const SizedBox(width: 8),
-              PriorityBadge(priority: task.priority),
-            ]),
+            bottom: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                StatusBadge(status: task.status),
+                PriorityBadge(priority: task.priority),
+                _heroCommitteeChip(),
+              ],
+            ),
           ),
           const SectionTitle('معلومات المهمة'),
           AppCard(
@@ -236,7 +258,8 @@ class _Body extends ConsumerWidget {
                         ? AppColors.statusOverdue
                         : null),
                 InfoRow(label: 'المسؤول', value: _resolveAssignee()),
-                InfoRow(label: 'الفريق / اللجنة', value: _resolveTeam()),
+                InfoRow(label: 'اللجنة', value: _committeeLabel()),
+                InfoRow(label: 'أنشأها', value: _creatorName()),
               ],
             ),
           ),

@@ -92,6 +92,10 @@ class Permissions {
   bool canViewCommitteeHours(int committeeId) =>
       isPresident || isInHr || isCommitteeHead(committeeId);
 
+  /// Gates the detailed hours **activity feed** (everyone's individual
+  /// entries, with delete powers) — HR members + club admins only.
+  /// (The aggregate honor *leaderboard* is open to every member; its tiles
+  /// are rendered ungated and the RPC is SECURITY DEFINER.)
   bool get canViewLeaderboards => isPresident || isInHr;
 
   // ─── notifications ────────────────────────────────────────────────

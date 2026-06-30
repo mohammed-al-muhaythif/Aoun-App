@@ -3,7 +3,7 @@
 
 class S {
   // App
-  static const appTitle = 'عاون';
+  static const appTitle = 'Aoun | عاوِنْ';
 
   // Auth
   static const login = 'تسجيل الدخول';

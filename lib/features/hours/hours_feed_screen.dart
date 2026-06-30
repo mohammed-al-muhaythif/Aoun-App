@@ -118,7 +118,7 @@ class HoursFeedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final meAsync = ref.watch(currentUserProvider);
     final perms = Permissions(meAsync.value);
-    final allowed = perms.canViewLeaderboards;  // HR or admin
+    final allowed = perms.canViewLeaderboards;  // HR or admin (detailed feed)
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -270,13 +270,23 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
     final weekTotal = _sumOfWeek(days);
     final key = 'w:$year-$month-$weekIndex';
     final collapsed = _isCollapsed(key);
-    final label = switch (weekIndex) {
-      1 => 'الأسبوع الأول',
-      2 => 'الأسبوع الثاني',
-      3 => 'الأسبوع الثالث',
-      4 => 'الأسبوع الرابع',
-      _ => 'الأسبوع الخامس',
+    // Each month is split into four fixed week-ranges; show the range so
+    // the numbering is unambiguous (e.g. "الأسبوع الأول (١–٧)").
+    final lastDay = DateTime(year, month + 1, 0).day;
+    final name = switch (weekIndex) {
+      1 => 'الأول',
+      2 => 'الثاني',
+      3 => 'الثالث',
+      _ => 'الرابع',
     };
+    final (int from, int to) = switch (weekIndex) {
+      1 => (1, 7),
+      2 => (8, 14),
+      3 => (15, 21),
+      _ => (22, lastDay),
+    };
+    final label =
+        'الأسبوع $name (${toArabicDigits(from)}–${toArabicDigits(to)})';
     return Padding(
       padding: const EdgeInsets.only(top: 8, right: 8, left: 8),
       child: Column(
@@ -290,7 +300,7 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
             onTap: () => _toggle(key),
           ),
           if (!collapsed)
-            for (final day in days.keys.toList()..sort((a, b) => b.compareTo(a)))
+            for (final day in days.keys.toList()..sort((a, b) => a.compareTo(b)))
               _daySection(day, days[day]!),
         ],
       ),
@@ -512,11 +522,11 @@ class _FeedBodyState extends ConsumerState<_FeedBody> {
     return v;
   }
 
+  /// Fixed day-ranges so every month has exactly four numbered weeks:
+  ///   days 1–7 → week 1, 8–14 → 2, 15–21 → 3, 22–end → 4.
   int _weekOfMonth(DateTime d) {
-    final firstDay = DateTime(d.year, d.month, 1);
-    final offset = firstDay.weekday % 7;  // Sun=7→0, Mon=1, ...
-    final dayOfMonth = d.day;
-    return ((dayOfMonth + offset - 1) ~/ 7) + 1;
+    final w = ((d.day - 1) ~/ 7) + 1;
+    return w > 4 ? 4 : w;
   }
 
   /// Can the current viewer delete arbitrary volunteer_hours rows?

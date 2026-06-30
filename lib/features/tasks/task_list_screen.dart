@@ -9,11 +9,14 @@ import '../../core/permissions/permissions.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/task.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/committee_repository.dart';
+import '../../data/repositories/profile_repository.dart';
 import '../../data/repositories/task_repository.dart';
 import '../../shared/widgets/design_system.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/notification_bell.dart';
 import '../../shared/widgets/status_badge.dart';
+import 'task_labels.dart';
 
 /// Task list — same row style as the dashboard's task list section
 /// (status dot + title + date | priority pill), with underline tabs
@@ -94,12 +97,18 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   }
 }
 
-class _TaskRow extends StatelessWidget {
+class _TaskRow extends ConsumerWidget {
   const _TaskRow({required this.task});
   final Task task;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final committees = ref.watch(committeesProvider).valueOrNull ?? const [];
+    final members = ref.watch(allMembersProvider).valueOrNull ?? const [];
+    final committee = taskCommitteeLabel(task, committees, members);
+    final creator = taskCreatorName(task, members);
+    final isGeneral = committee == 'مهمة عامة';
+
     return InkWell(
       onTap: () => context.push('/tasks/${task.id}'),
       child: Container(
@@ -107,8 +116,11 @@ class _TaskRow extends StatelessWidget {
         decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
-        child: Row(children: [
-          StatusDot(color: statusColor(task.status)),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: StatusDot(color: statusColor(task.status)),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -119,8 +131,29 @@ class _TaskRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.cairo(
                         fontWeight: FontWeight.w700, fontSize: 14)),
+                const SizedBox(height: 6),
+                // Committee (or "مهمة عامة") + creator — shown clearly here
+                // so members can tell at a glance from outside the task.
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _CommitteeChip(label: committee, general: isGeneral),
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.person_outline,
+                          size: 13, color: AppColors.textSecondary),
+                      const SizedBox(width: 3),
+                      Text('بواسطة $creator',
+                          style: GoogleFonts.cairo(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary)),
+                    ]),
+                  ],
+                ),
                 if (task.dueDate != null) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(formatArabicDate(task.dueDate),
                       style: GoogleFonts.cairo(
                           fontSize: 11, color: AppColors.textSecondary)),
@@ -128,6 +161,7 @@ class _TaskRow extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -138,6 +172,33 @@ class _TaskRow extends StatelessWidget {
           ),
         ]),
       ),
+    );
+  }
+}
+
+/// Small tinted chip showing the task's committee, or "مهمة عامة".
+class _CommitteeChip extends StatelessWidget {
+  const _CommitteeChip({required this.label, required this.general});
+  final String label;
+  final bool general;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = general ? AppColors.textSecondary : AppColors.purple;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(general ? Icons.public : Icons.groups_outlined,
+            size: 13, color: color),
+        const SizedBox(width: 4),
+        Text(label,
+            style: GoogleFonts.cairo(
+                fontSize: 11.5, fontWeight: FontWeight.w700, color: color)),
+      ]),
     );
   }
 }

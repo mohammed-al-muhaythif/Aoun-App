@@ -17,20 +17,20 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="عون — منصة إدارة المهام والساعات التطوعية لنادي عون بجامعة الملك سعود.">
+  <meta name="description" content="عاون — منصة إدارة المهام والساعات التطوعية لمبادرة عاون بجامعة الملك سعود.">
   <meta name="theme-color" content="#1C6FB5">
 
   <!-- iOS / PWA meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="عون">
+  <meta name="apple-mobile-web-app-title" content="Aoun | عاوِنْ">
   <link rel="apple-touch-icon" href="icons/Icon-180.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>عون - AWAN</title>
+  <title>Aoun | عاوِنْ</title>
   <link rel="manifest" href="manifest.json">
 
   <!-- ───────────── OneSignal Web Push (SDK v16) ─────────────
@@ -97,16 +97,15 @@
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function (OneSignal) {
-      // Resolve the worker scope relative to <base href> so this works whether
-      // the app is served from "/" or a subpath (e.g. "/app/").
+      // OneSignal's worker is scoped to /onesignal/ so it never collides with
+      // Flutter's root service worker (this is the build that works on
+      // Cloudflare; the file lives at web/onesignal/OneSignalSDKWorker.js).
       var swScope = new URL("onesignal/", document.baseURI).pathname;
       await OneSignal.init({
         // Public OneSignal App ID — keep in sync with ONESIGNAL_APP_ID in .env
         appId: "abb7b442-f4dc-4e76-a7fa-80a721ec2739",
-        // Custom scope keeps OneSignal's worker out of Flutter's way.
         serviceWorkerParam: { scope: swScope },
         serviceWorkerPath: "onesignal/OneSignalSDKWorker.js",
-        // Lets you test push from http://localhost during development.
         allowLocalhostAsSecureOrigin: true,
         // No bell widget and no auto-prompt — we prompt from a Dart button
         // so iOS' user-gesture requirement is satisfied.
