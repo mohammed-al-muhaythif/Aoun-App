@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="عاون — منصة إدارة المهام والساعات التطوعية لمبادرة عاون بجامعة الملك سعود.">
+  <meta name="theme-color" content="#1C6FB5">
+
+  <!-- iOS / PWA meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Aoun | عاوِنْ">
+  <link rel="apple-touch-icon" href="icons/Icon-180.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Aoun | عاوِنْ</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- ───────────── OneSignal Web Push (SDK v16) ─────────────
+       The Flutter `onesignal_flutter` plugin does NOT support web, so on the
+       PWA OneSignal lives entirely here in JS. Dart talks to it through the
+       window.aoun* shims defined below (see lib/core/push/). -->
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    // Ask the user to allow push. MUST be called from a real user gesture
+    // (a button tap) — required by iOS Safari 16.4+ installed PWAs.
+    // Resolves true once permission is actually granted.
+    window.aounRequestPushPermission = function () {
+      return new Promise(function (resolve) {
+        window.OneSignalDeferred.push(async function (OneSignal) {
+          try {
+            await OneSignal.Notifications.requestPermission();
+            resolve(OneSignal.Notifications.permission === true);
+          } catch (e) {
+            console.error("[OneSignal] requestPermission failed", e);
+            resolve(false);
+          }
+        });
+      });
+    };
+
+    // Bind / unbind the Supabase user id as OneSignal's external_id so the
+    // send-push edge function can target include_aliases.external_id.
+    window.aounOneSignalLogin = function (externalId) {
+      window.OneSignalDeferred.push(function (OneSignal) {
+        OneSignal.login(externalId);
+      });
+    };
+    window.aounOneSignalLogout = function () {
+      window.OneSignalDeferred.push(function (OneSignal) {
+        OneSignal.logout();
+      });
+    };
+
+    // Current permission state (true = granted).
+    window.aounPushPermission = function () {
+      return new Promise(function (resolve) {
+        window.OneSignalDeferred.push(function (OneSignal) {
+          resolve(OneSignal.Notifications.permission === true);
+        });
+      });
+    };
+
+    // Whether this browser/context can receive web push at all.
+    // (false on an iOS Safari tab that hasn't been added to the Home Screen.)
+    window.aounPushSupported = function () {
+      return new Promise(function (resolve) {
+        window.OneSignalDeferred.push(function (OneSignal) {
+          try {
+            resolve(OneSignal.Notifications.isPushSupported() === true);
+          } catch (e) {
+            resolve(false);
+          }
+        });
+      });
+    };
+  </script>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      // OneSignal's worker is scoped to /onesignal/ so it never collides with
+      // Flutter's root service worker (this is the build that works on
+      // Cloudflare; the file lives at web/onesignal/OneSignalSDKWorker.js).
+      var swScope = new URL("onesignal/", document.baseURI).pathname;
+      await OneSignal.init({
+        // Public OneSignal App ID — keep in sync with ONESIGNAL_APP_ID in .env
+        appId: "abb7b442-f4dc-4e76-a7fa-80a721ec2739",
+        serviceWorkerParam: { scope: swScope },
+        serviceWorkerPath: "onesignal/OneSignalSDKWorker.js",
+        allowLocalhostAsSecureOrigin: true,
+        // No bell widget and no auto-prompt — we prompt from a Dart button
+        // so iOS' user-gesture requirement is satisfied.
+        notifyButton: { enable: false },
+        autoResubscribe: true,
+      });
+    });
+  </script>
+  <!-- ─────────────────────────────────────────────────────── -->
+</head>
+<body>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

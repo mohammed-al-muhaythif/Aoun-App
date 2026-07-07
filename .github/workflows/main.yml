@@ -1,0 +1,16 @@
+name: Dispatch Push Notifications
+
+on:
+  schedule:
+    - cron: '* * * * *'
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call dispatch-push
+        run: |
+          curl -X POST \
+            https://iqhezsojsphjftwengvk.supabase.co/functions/v1/dispatch-push \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"

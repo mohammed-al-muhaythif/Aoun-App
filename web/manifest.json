@@ -1,0 +1,42 @@
+{
+    "name": "Aoun | عاوِنْ",
+    "short_name": "Aoun | عاوِنْ",
+    "description": "عاون — منصة إدارة المهام والساعات التطوعية لمبادرة عاون بجامعة الملك سعود.",
+    "lang": "ar",
+    "dir": "rtl",
+    "start_url": ".",
+    "scope": ".",
+    "display": "standalone",
+    "display_override": ["standalone", "minimal-ui"],
+    "orientation": "portrait-primary",
+    "background_color": "#EDF6FD",
+    "theme_color": "#1C6FB5",
+    "categories": ["productivity", "education", "social"],
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
